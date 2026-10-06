@@ -1,0 +1,11 @@
+node_modules/
+
+# Local media library. GitHub rejects files over 100 MB, and this folder
+# is the video library that stays on the machine running the app.
+public/uploads/
+
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db

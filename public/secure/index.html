@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Főoldal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #141414; 
+            color: #e5e5e5; 
+            position: relative; 
+            overflow-x: hidden; 
+            min-height: 100vh; 
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        #backgroundCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; 
+            opacity: 0.3;
+        }
+        .navbar { 
+            background-color: rgba(0, 0, 0, 0.85) !important;
+            backdrop-filter: blur(10px);
+            position: sticky; 
+            top: 0; 
+            width: 100%; 
+            z-index: 1000; 
+            padding: 1rem 0;
+        }
+        .navbar .nav-link {
+            color: white !important;
+            font-weight: 500;
+        }
+        .profile-pic { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+        }
+        .search-form input {
+            background-color: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+        }
+        .search-form input::placeholder {
+            color: #aaa;
+        }
+        .search-form button {
+            background-color: #e50914;
+            border: none;
+        }
+        .container {
+            padding-top: 90px;
+            max-width: 1400px;
+        }
+
+        /* SZEKCIÓ CÍMEK – balra igazítva, modern */
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 70px 0 30px 30px;
+            color: white;
+        }
+
+        /* CARDOK – eredeti Bootstrap grid (col-md-4 = 3 oszlop = szélesebb card-ok) */
+        .card { 
+            background-color: #222; 
+            border: none; 
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer; 
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            margin-bottom: 30px;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+        }
+        .card-img-top { 
+            height: 200px; /* Pontosan marad 200px */
+            object-fit: cover; 
+        }
+        .card-body {
+            background-color: #222;
+            padding: 20px;
+        }
+        .card-title {
+            color: #FFECB3; 
+            font-size: 1.2rem;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        footer { 
+            background-color: #000; 
+            padding: 40px 20px; 
+            text-align: center; 
+            color: #666;
+            margin-top: 100px;
+        }
+#preloader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.8s ease-out;
+    }
+    #preloader.fade-out {
+        opacity: 0;
+        pointer-events: none;
+    }
+    .loader {
+        text-align: center;
+    }
+    .spinner {
+        width: 80px;
+        height: 80px;
+        border: 6px solid #333;
+        border-top: 6px solid #e50914;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+    .loader p {
+        color: #e50914;
+        font-size: 2rem;
+        font-weight: bold;
+        letter-spacing: 4px;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
+    }
+        @media (max-width: 768px) {
+            .section-title {
+                margin-left: 20px;
+                font-size: 1.6rem;
+            }
+            .card-img-top {
+                height: 180px;
+            }
+        }
+        @media (max-width: 576px) {
+            .container {
+                padding-top: 70px;
+            }
+            .section-title {
+                margin-left: 15px;
+                font-size: 1.4rem;
+            }
+            .card-img-top {
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="backgroundCanvas"></canvas>
+    <!-- PRELOADER -->
+    <div id="preloader">
+        <div class="loader">
+            <div class="spinner"></div>
+            <p>Streamwars</p>
+        </div>
+    </div>
+    <nav class="navbar navbar-expand-lg animate-in">
+        <div class="container-fluid">
+            <div class="dropdown">
+                <img id="profilePic" class="profile-pic" src="/Uploads/profiles/default_profile.jpg" alt="Profilkép" data-bs-toggle="dropdown">
+                <ul class="dropdown-menu dropdown-menu-dark">
+                    <li><a class="dropdown-item text-white" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">Profil Módosítása</a></li>
+                    <li><a class="dropdown-item text-white" href="/logout">Kijelentkezés</a></li>
+                </ul>
+            </div>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Filmek</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Star Wars</a></li>
+                            <li><a class="dropdown-item" href="#">Gyűrűk Ura</a></li>
+                            <li><a class="dropdown-item" href="#">Indiana Jones</a></li>
+                            <li><a class="dropdown-item" href="#">RUSH</a></li>
+                            <li><a class="dropdown-item" href="#">Oppenheimer</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Sorozatok</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="letoltes.html">Letöltések</a></li>
+                            <li><a class="dropdown-item" href="#">Star Wars</a></li>
+                            <li><a class="dropdown-item" href="#">Deadly Class</a></li>
+                            <li><a class="dropdown-item" href="#">Hannibal</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Tematika</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Akció</a></li>
+                            <li><a class="dropdown-item" href="#">Kaland</a></li>
+                            <li><a class="dropdown-item" href="#">Fantasy</a></li>
+                            <li><a class="dropdown-item" href="#">Sci-Fi</a></li>
+                            <li><a class="dropdown-item" href="#">Romantikus</a></li>
+                            <li><a class="dropdown-item" href="#">Horror</a></li>
+                            <li><a class="dropdown-item" href="#">Disztópia</a></li>
+                            <li><a class="dropdown-item" href="#">Poszt-apokaliptikus</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Újdonságok</a>
+                        <ul class="dropdown-menu" id="newUploadsDropdown"></ul>
+                    </li>
+                </ul>
+            </div>
+            <form class="d-flex search-form" id="searchForm">
+                <input class="form-control me-2" type="search" placeholder="Keresés" id="searchInput">
+                <button class="btn btn-danger" type="submit">Keres</button>
+            </form>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Keresési eredmények -->
+        <div id="searchResults" style="display: none;">
+            <h3 class="section-title animate-in">Keresési eredmények</h3>
+            <div class="row" id="searchResultsContainer">
+                <p class="text-center text-muted">Írd be a keresett címet!</p>
+            </div>
+        </div>
+
+        <!-- Ajánlott -->
+        <h3 class="section-title animate-in">Ajánlott: Legújabb feltöltések</h3>
+        <div class="row animate-in" id="latestUploads">
+            <p class="no-content text-muted" style="display: none;">Nincsenek új feltöltések.</p>
+        </div>
+
+        <!-- Folytasd -->
+        <h3 class="section-title animate-in">Folytasd ahol abbahagytad</h3>
+        <div class="row animate-in" id="userProgress">
+            <p class="no-content text-muted" style="display: none;">Nincs folytatnivaló.</p>
+        </div>
+
+        <!-- Nagyobb egységek – eredeti grid, szélesebb card-ok -->
+        <h3 class="section-title animate-in">Franchise-ok</h3>
+        <div class="row animate-in" id="categories">
+            <div class="col-12 col-sm-6 col-md-4 animate-in">
+                <a href="/secure/sw.html" class="card">
+                    <img src="/uploads/thumbnails/sw.jpg" class="card-img-top" alt="Star Wars">
+                    <div class="card-body">
+                        <h5 class="card-title">Star Wars</h5>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 animate-in">
+                <a href="/secure/lotr.html" class="card">
+                    <img src="/uploads/thumbnails/lotr.jpg" class="card-img-top" alt="Gyűrűk Ura">
+                    <div class="card-body">
+                        <h5 class="card-title">Gyűrűk Ura</h5>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 animate-in">
+                <a href="/secure/indi.html" class="card">
+                    <img src="/uploads/thumbnails/indi.jpg" class="card-img-top" alt="Indiana Jones">
+                    <div class="card-body">
+                        <h5 class="card-title">Indiana Jones</h5>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 animate-in">
+                <a href="/secure/hp.html" class="card">
+                    <img src="/uploads/thumbnails/hp.jpg" class="card-img-top" alt="Harry Potter">
+                    <div class="card-body">
+                        <h5 class="card-title">Harry Potter</h5>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 animate-in">
+                <a href="/secure/dragon.html" class="card">
+                    <img src="/uploads/thumbnails/dragon.jpg" class="card-img-top" alt="How To Train Your Dragon">
+                    <div class="card-body">
+                        <h5 class="card-title">How To Train Your Dragon</h5>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 animate-in">
+                <a href="/secure/matrix.html" class="card">
+                    <img src="/uploads/thumbnails/matrix.jpg" class="card-img-top" alt="Matrix">
+                    <div class="card-body">
+                        <h5 class="card-title">Matrix</h5>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Sorozatok -->
+        <h3 class="section-title animate-in">Az összes sorozat</h3>
+        <div class="row animate-in" id="allSeries">
+            <p class="no-content text-muted" style="display: none;">Nincsenek sorozatok.</p>
+        </div>
+
+        <!-- Filmek -->
+        <h3 class="section-title animate-in">Az összes Film</h3>
+        <div class="row animate-in" id="allContent">
+            <p class="no-content text-muted" style="display: none;">Nincs elérhető tartalom.</p>
+        </div>
+    </div>
+
+    <!-- Itt folytatódnak a modalok, footer és a script-ek (maradjanak változatlanul) -->
+
+    <!-- Videó lejátszás modal -->
+    <div class="modal fade" id="videoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="videoTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <video controls class="w-100" id="videoPlayer">
+                        <source src="" type="video/mp4">
+                        A böngésződ nem támogatja a videó lejátszást.
+                    </video>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profil módosítás modal -->
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title">Profil Módosítása</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="profileForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="profile_pic" class="form-label">Profilkép feltöltése</label>
+                            <input type="file" class="form-control" id="profile_pic" name="profile_pic">
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">Új jelszó</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password">
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Új jelszó megerősítése</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                        </div>
+                        <button type="submit" class="btn btn-danger">Mentés</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="animate-in">
+        <p>&copy; Streamwars Streaming Szolgáltatás. Semmilyen jog nincs fenntartva.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/secure/js/animations.js"></script>
+    <script>
+        // Felhasználó adatok betöltése
+        fetch('/api/user')
+            .then(res => res.json())
+            .then(data => {
+                const profilePic = document.getElementById('profilePic');
+                profilePic.src = data.profile_pic || '/Uploads/profiles/default_profile.jpg';
+            })
+            .catch(err => {
+                console.error('Hiba a felhasználó adatok lekérésekor:', err);
+                document.getElementById('profilePic').src = '/Uploads/profiles/default_profile.jpg';
+            });
+
+        // Legújabb feltöltések
+        fetch('/api/latest-uploads')
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('latestUploads');
+                const noContent = container.querySelector('.no-content');
+                container.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(item => {
+                        const cardTitle = item.type === 'movie' ? item.title : `${item.title} (${item.type})`;
+                        const card = `
+                            <div class="col-12 col-sm-6 col-md-4 animate-in" data-bs-toggle="modal" data-bs-target="#videoModal" data-video-src="${item.file_path || ''}" data-video-title="${item.title}" data-content-id="${item.id}" data-content-type="${item.type}">
+                                <div class="card">
+                                    <img src="${item.thumbnail || 'https://via.placeholder.com/200'}" class="card-img-top" alt="${item.title}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${cardTitle}</h5>
+                                    </div>
+                                </div>
+                            </div>`;
+                        container.innerHTML += card;
+                    });
+                    noContent.style.display = 'none';
+                } else {
+                    noContent.style.display = 'block';
+                }
+                setTimeout(() => container.querySelectorAll('.animate-in').forEach(el => el.classList.add('visible')), 100);
+
+                // Újdonságok dropdown
+                const dropdown = document.getElementById('newUploadsDropdown');
+                dropdown.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(item => {
+                        const itemTitle = item.type === 'movie' ? item.title : `${item.title} (${item.type})`;
+                        dropdown.innerHTML += `<li><a class="dropdown-item" href="#">${itemTitle}</a></li>`;
+                    });
+                } else {
+                    dropdown.innerHTML = '<li><a class="dropdown-item" href="#">Nincsenek új feltöltések</a></li>';
+                }
+            })
+            .catch(() => document.getElementById('latestUploads').querySelector('.no-content').style.display = 'block');
+
+        // Utoljára nézett
+        function updateContinueWatching() {
+            fetch('/api/user-progress')
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('userProgress');
+                    const noContent = container.querySelector('.no-content');
+                    container.innerHTML = '';
+                    if (data && data.file_path && data.title) {
+                        const progressText = data.progress ? `Progress: ${Math.round(data.progress)} mp` : 'Progress: ismeretlen';
+                        const card = `
+                            <div class="col-12 col-sm-6 col-md-4 animate-in" data-bs-toggle="modal" data-bs-target="#videoModal" data-video-src="${data.file_path || ''}" data-video-title="Folytasd: ${data.title}" data-content-id="${data.content_id}" data-content-type="${data.content_type}" data-progress="${data.progress || 0}">
+                                <div class="card">
+                                    <img src="${data.thumbnail || 'https://via.placeholder.com/200'}" class="card-img-top" alt="${data.title}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Folytasd: ${data.title} - ${progressText}</h5>
+                                    </div>
+                                </div>
+                            </div>`;
+                        container.innerHTML += card;
+                        noContent.style.display = 'none';
+                    } else {
+                        noContent.style.display = 'block';
+                    }
+                    setTimeout(() => container.querySelectorAll('.animate-in').forEach(el => el.classList.add('visible')), 100);
+                })
+                .catch(() => document.getElementById('userProgress').querySelector('.no-content').style.display = 'block');
+        }
+        updateContinueWatching();
+
+
+        // Összes film
+        fetch('/api/all-content')
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('allContent');
+                const noContent = container.querySelector('.no-content');
+                const movies = data.filter(item => item.type === 'movie');
+                container.innerHTML = '';
+                if (movies.length > 0) {
+                    movies.forEach(item => {
+                        const card = `
+                            <div class="col-12 col-sm-6 col-md-4 animate-in" data-bs-toggle="modal" data-bs-target="#videoModal" data-video-src="${item.file_path || ''}" data-video-title="${item.title}" data-content-id="${item.id}" data-content-type="${item.type}">
+                                <div class="card">
+                                    <img src="${item.thumbnail || 'https://via.placeholder.com/200'}" class="card-img-top" alt="${item.title}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${item.title}</h5>
+                                    </div>
+                                </div>
+                            </div>`;
+                        container.innerHTML += card;
+                    });
+                    noContent.style.display = 'none';
+                } else {
+                    noContent.style.display = 'block';
+                }
+                setTimeout(() => container.querySelectorAll('.animate-in').forEach(el => el.classList.add('visible')), 100);
+            })
+            .catch(() => document.getElementById('allContent').querySelector('.no-content').style.display = 'block');
+
+        // Összes sorozat
+        fetch('/api/series')
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('allSeries');
+                const noContent = container.querySelector('.no-content');
+                container.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(item => {
+                        const card = `
+                            <div class="col-12 col-sm-6 col-md-4 animate-in">
+                                <a href="${item.link}" class="card">
+                                    <img src="${item.thumbnail}" class="card-img-top" alt="${item.title}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${item.title}</h5>
+                                    </div>
+                                </a>
+                            </div>`;
+                        container.innerHTML += card;
+                    });
+                    noContent.style.display = 'none';
+                } else {
+                    noContent.style.display = 'block';
+                }
+                setTimeout(() => container.querySelectorAll('.animate-in').forEach(el => el.classList.add('visible')), 100);
+            })
+            .catch(() => document.getElementById('allSeries').querySelector('.no-content').style.display = 'block');
+
+        // === KERESŐ FUNKCIÓ ===
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        const searchResultsContainer = document.getElementById('searchResultsContainer');
+
+        searchForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (query.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            fetch(`/api/search?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    searchResultsContainer.innerHTML = '';
+                    searchResults.style.display = 'block';
+
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            if (item.type === 'movie') {
+                                searchResultsContainer.innerHTML += `
+                                    <div class="col-12 col-sm-6 col-md-4 animate-in" data-bs-toggle="modal" data-bs-target="#videoModal"
+                                         data-video-src="${item.link}" data-video-title="${item.title}"
+                                         data-content-id="${item.id}" data-content-type="movie">
+                                        <div class="card">
+                                            <img src="${item.thumbnail}" class="card-img-top" alt="${item.title}">
+                                            <div class="card-body">
+                                                <h5 class="card-title">${item.title} (Film)</h5>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                            } else {
+                                searchResultsContainer.innerHTML += `
+                                    <div class="col-12 col-sm-6 col-md-4 animate-in">
+                                        <a href="${item.link}" class="card">
+                                            <img src="${item.thumbnail}" class="card-img-top" alt="${item.title}">
+                                            <div class="card-body">
+                                                <h5 class="card-title">${item.title} (Sorozat)</h5>
+                                            </div>
+                                        </a>
+                                    </div>`;
+                            }
+                        });
+                    } else {
+                        searchResultsContainer.innerHTML = '<p class="text-center col-12">Nincs találat.</p>';
+                    }
+
+                    setTimeout(() => searchResultsContainer.querySelectorAll('.animate-in').forEach(el => el.classList.add('visible')), 100);
+                })
+                .catch(() => {
+                    searchResultsContainer.innerHTML = '<p class="text-center col-12 text-danger">Hiba a kereséskor.</p>';
+                });
+        });
+
+        // Ha üres a mező, rejtsük el
+        searchInput.addEventListener('input', () => {
+            if (searchInput.value.trim() === '') {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        // Videó modal kezelése (marad változatlan – a te kódod alapján)
+        const videoModal = document.getElementById('videoModal');
+        let videoData = {};
+        let progressInterval = null;
+        let button = null;
+
+        videoModal.addEventListener('show.bs.modal', event => {
+            button = event.relatedTarget;
+            videoData.videoSrc = button.getAttribute('data-video-src');
+            videoData.videoTitle = button.getAttribute('data-video-title');
+            videoData.contentId = button.getAttribute('data-content-id');
+            videoData.contentType = button.getAttribute('data-content-type');
+            videoData.progress = parseFloat(button.getAttribute('data-progress')) || 0;
+
+            const videoPlayer = videoModal.querySelector('#videoPlayer');
+            const videoSource = videoPlayer.querySelector('source');
+            const fullVideoSrc = videoData.videoSrc.startsWith('http') ? videoData.videoSrc : `http://streamwars.no-ip.org${videoData.videoSrc}`;
+
+            videoSource.src = fullVideoSrc;
+            videoModal.querySelector('#videoTitle').innerText = videoData.videoTitle;
+            videoPlayer.load();
+
+            const saveProgress = () => {
+                const currentTime = videoPlayer.currentTime;
+                const duration = videoPlayer.duration || 0;
+                if (currentTime > 0 && duration > 0 && currentTime < duration - 5) {
+                    fetch('/api/save-progress', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            content_id: videoData.contentId,
+                            content_type: videoData.contentType,
+                            progress: currentTime,
+                            file_path: videoData.videoSrc,
+                            thumbnail: button.querySelector('img')?.src || 'https://via.placeholder.com/200',
+                            title: videoData.videoTitle.replace('Folytasd: ', '').trim()
+                        })
+                    }).catch(() => {});
+                }
+            };
+
+            videoPlayer.addEventListener('pause', saveProgress);
+            videoPlayer.addEventListener('seeking', saveProgress);
+
+            progressInterval = setInterval(() => {
+                if (!videoPlayer.paused && !videoPlayer.ended) {
+                    saveProgress();
+                }
+            }, 10000);
+
+            videoModal.addEventListener('hide.bs.modal', () => {
+                videoPlayer.pause();
+                videoPlayer.removeAttribute('src');
+                videoPlayer.load();
+                videoPlayer.currentTime = 0;
+
+                if (videoData.contentId) {
+                    saveProgress();
+                }
+
+                if (progressInterval) clearInterval(progressInterval);
+                videoPlayer.removeEventListener('pause', saveProgress);
+                videoPlayer.removeEventListener('seeking', saveProgress);
+
+                updateContinueWatching();
+            }, { once: true });
+
+            videoPlayer.currentTime = videoData.progress;
+            videoPlayer.play().catch(() => {});
+        });
+
+        // Profil módosítás (marad változatlan)
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const newPassword = formData.get('new_password');
+            const confirmPassword = formData.get('confirm_password');
+
+            if (newPassword && newPassword !== confirmPassword) {
+                alert('A jelszavak nem egyeznek!');
+                return;
+            }
+
+            try {
+                if (formData.get('profile_pic').size > 0) {
+                    const response = await fetch('/update-profile-pic', { method: 'POST', body: formData });
+                    const data = await response.json();
+                    if (data.newProfilePic) {
+                        document.getElementById('profilePic').src = data.newProfilePic;
+                    }
+                }
+
+                if (newPassword) {
+                    const response = await fetch('/update-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ newPassword })
+                    });
+                    if (!response.ok) throw new Error('Hiba a jelszó módosításakor');
+                }
+
+                alert('Profil sikeresen módosítva!');
+                location.reload();
+            } catch (err) {
+                alert('Hiba történt: ' + err.message);
+            }
+        });
+        // Preloader eltüntetése, amikor az oldal teljesen betöltődött
+    window.addEventListener('load', () => {
+        const preloader = document.getElementById('preloader');
+        if (preloader) {
+            setTimeout(() => {
+                preloader.classList.add('fade-out');
+                setTimeout(() => {
+                    preloader.style.display = 'none';
+                }, 800);
+            }, 500); // Kis késleltetés, hogy látsszon is
+        }
+    });
+    </script>
+</body>
+</html>

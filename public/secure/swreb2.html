@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorozat Epizódok</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #141414; 
+            color: white; 
+            position: relative; 
+            overflow-x: hidden; 
+            min-height: 100vh; 
+        }
+        .navbar { 
+            background-color: #000; 
+            position: sticky; 
+            top: 0; 
+            width: 100%; 
+            z-index: 1000; 
+        }
+        .dropdown-menu {
+            z-index: 1001;
+        }
+        .profile-pic { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+        }
+        .card { 
+            background-color: #222; 
+            border: none; 
+            margin-bottom: 15px; 
+            cursor: pointer;
+        }
+        .card-img-top { 
+            height: 200px; 
+            object-fit: cover; 
+        }
+        .card-title {
+            color: #FFECB3;
+        }
+        footer { 
+            background-color: #000; 
+            padding: 20px; 
+            text-align: center; 
+        }
+        .animate-in {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .animate-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        #backgroundCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+            background-color: transparent;
+        }
+        .container {
+            padding-top: 70px;
+        }
+        @media (max-width: 576px) {
+            .profile-pic { width: 30px; height: 30px; }
+            .navbar-nav { text-align: center; }
+            .card-img-top { height: 150px; }
+            .container { padding: 10px; padding-top: 60px; }
+            .search-form input { font-size: 0.9rem; }
+            .search-form button { font-size: 0.9rem; padding: 5px 10px; }
+        }
+        @media (max-width: 768px) {
+            .card-img-top { height: 180px; }
+            h3 { font-size: 1.2rem; }
+            .container { padding-top: 65px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="backgroundCanvas"></canvas>
+
+    <nav class="navbar navbar-expand-lg animate-in">
+        <div class="container-fluid">
+            <!-- Bal: Profil -->
+            <div class="dropdown">
+                <img id="profilePic" class="profile-pic" src="/Uploads/profiles/default_profile.jpg" alt="Profilkép" data-bs-toggle="dropdown">
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">Profil Módosítása</a></li>
+                    <li><a class="dropdown-item" href="/logout">Kijelentkezés</a></li>
+                </ul>
+            </div>
+            <!-- Közép: Navigáció -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="/secure/index.html">Főoldal</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-white" href="#" data-bs-toggle="dropdown">Évadok</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/secure/swreb1.html">S1</a></li>
+                            <li><a class="dropdown-item" href="/secure/swreb2.html">S2</a></li>
+                            <li><a class="dropdown-item" href="/secure/swreb3.html">S3</a></li>
+                            <li><a class="dropdown-item" href="/secure/swreb4.html">S4</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <!-- Jobb: Keresés -->
+            <form class="d-flex search-form">
+                <input class="form-control me-2" type="search" placeholder="Keresés" aria-label="Search">
+                <button class="btn btn-outline-light" type="submit">Keres</button>
+            </form>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h3 class="animate-in">Sorozat Epizódok</h3>
+        <div class="row animate-in" id="episodesContainer">
+            <p class="no-content animate-in" style="display: none;">Nincsenek elérhető epizódok.</p>
+        </div>
+    </div>
+
+    <!-- Videó lejátszás modal -->
+    <div class="modal fade" id="videoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="videoTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <video controls class="w-100" id="videoPlayer">
+                        <source src="" type="video/mp4">
+                        A böngésződ nem támogatja a videó lejátszást.
+                    </video>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profil módosítás modal -->
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title">Profil Módosítása</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="profileForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="profile_pic" class="form-label">Profilkép feltöltése</label>
+                            <input type="file" class="form-control" id="profile_pic" name="profile_pic">
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">Új jelszó</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password">
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Új jelszó megerősítése</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                        </div>
+                        <button type="submit" class="btn btn-danger">Mentés</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="animate-in">
+        <p>&copy; Streamwars Streaming Szolgáltatás. Semmilyen jog nincs fenntartva.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/secure/js/animations.js"></script>
+    <script>
+        // Sorozat azonosító és cím definiálása (ezt kell módosítani új sorozathoz)
+        const SERIES_ID = 7; // Példa: series_id
+        const SERIES_TITLE = "S2"; // Példa: title
+
+        // Felhasználó adatok betöltése
+        fetch('/api/user')
+            .then(res => res.json())
+            .then(data => {
+                const profilePic = document.getElementById('profilePic');
+                profilePic.src = data.profile_pic || '/Uploads/profiles/default_profile.jpg';
+            })
+            .catch(err => {
+                console.error('Hiba a felhasználó adatok lekérésekor:', err);
+                document.getElementById('profilePic').src = '/Uploads/profiles/default_profile.jpg';
+            });
+
+        // Epizódok betöltése
+        fetch(`/api/series-episodes?series_id=${SERIES_ID}&title=${encodeURIComponent(SERIES_TITLE)}`)
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP hiba: ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                const container = document.getElementById('episodesContainer');
+                const noContent = container.querySelector('.no-content');
+                container.innerHTML = ''; // Töröljük a korábbi tartalmat
+                if (data && data.length > 0) {
+                    data.forEach(item => {
+                        const card = `
+                            <div class="col-12 col-sm-6 col-md-4 animate-in" data-bs-toggle="modal" data-bs-target="#videoModal" data-video-src="${item.file_path || ''}" data-video-title="${item.title} (Epizód ${item.episode_number})" data-content-id="${item.id}" data-content-type="${item.content_type}">
+                                <div class="card">
+                                    <img src="${item.thumbnail || 'https://via.placeholder.com/200'}" class="card-img-top" alt="${item.title}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${item.title} (Epizód ${item.episode_number})</h5>
+                                    </div>
+                                </div>
+                            </div>`;
+                        container.innerHTML += card;
+                    });
+                    noContent.style.display = 'none';
+                } else {
+                    noContent.style.display = 'block';
+                }
+                setTimeout(() => {
+                    container.querySelectorAll('.animate-in').forEach(el => el.classList.add('visible'));
+                }, 100);
+            })
+            .catch(err => {
+                console.error('Hiba az epizódok lekérésekor:', err);
+                document.getElementById('episodesContainer').querySelector('.no-content').style.display = 'block';
+            });
+
+        // Videó modal kezelése
+        const videoModal = document.getElementById('videoModal');
+        let videoData = {}; // Objektum a videó adatok tárolására
+        videoModal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget;
+            videoData.videoSrc = button.getAttribute('data-video-src');
+            videoData.videoTitle = button.getAttribute('data-video-title');
+            videoData.contentId = button.getAttribute('data-content-id');
+            videoData.contentType = button.getAttribute('data-content-type');
+            const videoPlayer = videoModal.querySelector('#videoPlayer');
+            const videoSource = videoPlayer.querySelector('source');
+            const fullVideoSrc = videoData.videoSrc.startsWith('http') ? videoData.videoSrc : `http://streamwars.no-ip.org${videoData.videoSrc}`;
+            videoSource.src = fullVideoSrc;
+            videoModal.querySelector('#videoTitle').innerText = videoData.videoTitle;
+            videoPlayer.load();
+            videoPlayer.play().catch(err => {
+                console.error('Hiba a videó lejátszásakor:', err);
+                alert('Hiba a videó lejátszásakor. Ellenőrizd, hogy a fájl létezik-e: ' + fullVideoSrc);
+            });
+            videoPlayer.addEventListener('error', () => {
+                console.error('Videó betöltési hiba:', videoSource.error);
+                alert('Hiba a videó betöltésekor. Ellenőrizd, hogy a fájl létezik-e: ' + fullVideoSrc);
+            }, { once: true });
+            videoPlayer.addEventListener('pause', () => {
+                const currentTime = videoPlayer.currentTime;
+                const duration = videoPlayer.duration || 0;
+                if (currentTime > 0 && duration > 0) {
+                    fetch('/api/save-progress', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            content_id: videoData.contentId,
+                            content_type: videoData.contentType,
+                            progress: currentTime,
+                            file_path: videoData.videoSrc,
+                            thumbnail: button.querySelector('img').src,
+                            title: videoData.videoTitle
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Progress saved:', { content_id: videoData.contentId, content_type: videoData.contentType, progress: currentTime });
+                        } else {
+                            console.error('Hiba a progress mentésekor:', data.error);
+                        }
+                    })
+                    .catch(err => console.error('Hiba a progress mentésekor:', err));
+                }
+            });
+        });
+
+        // Videó leállítása és progress mentése modal bezárásakor
+        videoModal.addEventListener('hide.bs.modal', () => {
+            const videoPlayer = videoModal.querySelector('#videoPlayer');
+            const currentTime = videoPlayer.currentTime;
+            const duration = videoPlayer.duration || 0;
+            videoPlayer.pause(); // Videó leállítása
+            if (currentTime > 0 && duration > 0) {
+                fetch('/api/save-progress', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content_id: videoData.contentId,
+                        content_type: videoData.contentType,
+                        progress: currentTime,
+                        file_path: videoData.videoSrc,
+                        thumbnail: videoModal.querySelector('img')?.src || 'https://via.placeholder.com/200',
+                        title: videoData.videoTitle
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Progress saved on modal close:', { content_id: videoData.contentId, content_type: videoData.contentType, progress: currentTime });
+                    } else {
+                        console.error('Hiba a progress mentésekor:', data.error);
+                    }
+                })
+                .catch(err => console.error('Hiba a progress mentésekor:', err));
+            }
+        });
+
+        // Profil módosítás űrlap kezelése
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const newPassword = formData.get('new_password');
+            const confirmPassword = formData.get('confirm_password');
+
+            if (newPassword && newPassword !== confirmPassword) {
+                alert('A jelszavak nem egyeznek!');
+                return;
+            }
+
+            try {
+                if (formData.get('profile_pic').size > 0) {
+                    const response = await fetch('/update-profile-pic', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (data.newProfilePic) {
+                        document.getElementById('profilePic').src = data.newProfilePic;
+                    }
+                }
+
+                if (newPassword) {
+                    const response = await fetch('/update-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ newPassword })
+                    });
+                    if (!response.ok) {
+                        throw new Error('Hiba a jelszó módosításakor');
+                    }
+                }
+
+                alert('Profil sikeresen módosítva!');
+                window.location.reload();
+            } catch (err) {
+                alert('Hiba történt: ' + err.message);
+            }
+        });
+    </script>
+</body>
+</html>

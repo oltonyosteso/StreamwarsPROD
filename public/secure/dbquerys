@@ -1,0 +1,30 @@
+INSERT INTO episodes (series_id, episode_number, title, file_path, thumbnail) VALUES
+(15, 1, 'S3', 'uploads/sorozatok/varazslok/Magicians.US.S03E01.BDRip.x264-PHASE.mp4', '/uploads/thumbnails/ep15.jpg'),
+(15, 2, 'S3', 'uploads/sorozatok/varazslok/Magicians.US.S03E02.BDRip.x264-PHASE.mp4', '/uploads/thumbnails/ep15.jpg'),
+(15, 3, 'S3', 'uploads/sorozatok/varazslok/Magicians.US.S03E03.BDRip.x264-PHASE.mp4', '/uploads/thumbnails/ep15.jpg'),
+(15, 4, 'S3', 'uploads/sorozatok/varazslok/Magicians.US.S03E04.BDRip.x264-PHASE.mp4', '/uploads/thumbnails/ep15.jpg'),
+(15, 5, 'S3', 'uploads/sorozatok/varazslok/Magicians.US.S03E05.BDRip.x264-PHASE.mp4', '/uploads/thumbnails/ep15.jpg'),
+(15, 6, 'S3', 'uploads/sorozatok/varazslok/Magicians.US.S03E06.BDRip.x264-PHASE.mp4', '/uploads/thumbnails/ep15.jpg'),
+(15, 7, 'S3', 'uploads/sorozatok/varazslok/Magicians.US.S03E07.BDRip.x264-PHASE.mp4', '/uploads/thumbnails/ep15.jpg'),
+(15, 8, 'S3', 'uploads/sorozatok/varazslok/Magicians.US.S03E08.BDRip.x264-PHASE.mp4', '/uploads/thumbnails/ep15.jpg'),
+(15, 9, 'S3', 'uploads/sorozatok/varazslok/Magicians.US.S03E09.BDRip.x264-PHASE.mp4', '/uploads/thumbnails/ep15.jpg'),
+(15, 10, 'S3', 'uploads/sorozatok/varazslok/Magicians.US.S03E10.BDRip.x264-PHASE.mp4', '/uploads/thumbnails/ep15.jpg'),
+(15, 11, 'S3', 'uploads/sorozatok/varazslok/Magicians.US.S03E11.BDRip.x264-PHASE.mp4', '/uploads/thumbnails/ep15.jpg'),
+(15, 12, 'S3', 'uploads/sorozatok/varazslok/Magicians.US.S03E12.BDRip.x264-PHASE.mp4', '/uploads/thumbnails/ep15.jpg'),
+(15, 13, 'S3', 'uploads/sorozatok/varazslok/Magicians.US.S03E13.BDRip.x264-PHASE.mp4', '/uploads/thumbnails/ep15.jpg');
+
+
+
+
+
+
+INSERT INTO series (title, category) VALUES
+('swandor', 'sci-fi'),
+('swboba', 'sci-fi'),
+('swmando', 'sci-fi'),
+('swahsoka', 'sci-fi'),
+('munkaugyek', 'vigjatek'),
+('hannibal', 'krimi'),
+('dclass', 'krimi'),
+('varazslok', 'fantasy'),
+('merlin', 'fantasy');

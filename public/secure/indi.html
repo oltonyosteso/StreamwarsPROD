@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indiana Jones</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #3d2b1f; /* Sivatagi homok szín */
+            color: white; 
+            min-height: 100vh; 
+            margin: 0;
+            position: relative;
+        }
+        /* INDI HÁTTÉR – hulló homokszemcsék */
+        #indiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        /* NAVBAR */
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.85) !important;
+            backdrop-filter: blur(8px);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1050;
+            transition: top 0.3s ease-in-out;
+            border-bottom: 1px solid #333;
+        }
+        .navbar.hidden {
+            top: -100px;
+        }
+        .navbar .nav-link, .navbar .btn {
+            color: white !important;
+        }
+        .navbar .back-btn {
+            border-color: white;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .navbar .back-btn:hover {
+            background-color: white !important;
+            color: black !important;
+        }
+        .profile-pic { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            border: 2px solid white;
+        }
+        .container {
+            padding-top: 120px;
+            padding-bottom: 100px;
+            position: relative;
+            z-index: 10;
+        }
+        .card { 
+            background-color: rgba(34, 34, 34, 0.85);
+            border: none; 
+            margin-bottom: 20px; 
+            cursor: pointer; 
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: scale(1.05);
+        }
+        .card-img-top { 
+            height: 200px; 
+            object-fit: cover; 
+        }
+        .card-title { 
+            color: #FFECB3; 
+        }
+        h2 {
+            color: #FFECB3;
+            text-shadow: 0 0 10px rgba(255, 236, 179, 0.5);
+        }
+        .animate-in {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .animate-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        footer {
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-top: 50px;
+            border-top: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <!-- INDI HÁTTÉR – hulló homokszemcsék -->
+    <canvas id="indiCanvas"></canvas>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg animate-in" id="mainNavbar">
+        <div class="container-fluid">
+            <div class="dropdown">
+                <img id="profilePic" class="profile-pic" src="/Uploads/profiles/default_profile.jpg" alt="Profilkép" data-bs-toggle="dropdown">
+                <ul class="dropdown-menu dropdown-menu-dark">
+                    <li><a class="dropdown-item text-white" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">Profil Módosítása</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-white" href="/logout">Kijelentkezés</a></li>
+                </ul>
+            </div>
+            <div class="mx-auto">
+                <a href="/secure/index.html" class="btn btn-outline-light btn-lg back-btn">Vissza a főoldalra</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="franchiseContent">
+            <p class="text-center no-content animate-in" style="display: none;">Nincs tartalom ebben a franchise-ban.</p>
+        </div>
+    </div>
+
+    <!-- Videó modal -->
+    <div class="modal fade" id="videoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="videoTitle"></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <video controls class="w-100" id="videoPlayer">
+                        <source src="" type="video/mp4">
+                        A böngésződ nem támogatja a videó lejátszást.
+                    </video>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profil módosítás modal -->
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title">Profil Módosítása</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="profileForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="profile_pic" class="form-label">Profilkép feltöltése</label>
+                            <input type="file" class="form-control bg-secondary text-white" id="profile_pic" name="profile_pic">
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">Új jelszó</label>
+                            <input type="password" class="form-control bg-secondary text-white" id="new_password" name="new_password">
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Új jelszó megerősítése</label>
+                            <input type="password" class="form-control bg-secondary text-white" id="confirm_password" name="confirm_password">
+                        </div>
+                        <button type="submit" class="btn btn-danger">Mentés</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="animate-in">
+        <p>&copy; Streamwars Streaming Szolgáltatás. Semmilyen jog nincs fenntartva.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // === INDI HÁTTÉR – hulló homokszemcsék animáció ===
+        const canvas = document.getElementById('indiCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const numParticles = 300; // Homokszemcsék száma
+
+        for (let i = 0; i < numParticles; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 2 + 1,
+                speedY: Math.random() * 2 + 1,
+                speedX: Math.random() * 1 - 0.5, // Enyhe oldalirányú mozgás (szél)
+                color: ['#d2b48c', '#f4a460', '#deb887', '#cd853f'][Math.floor(Math.random() * 4)] // Homok árnyalatok
+            });
+        }
+
+        function drawSand() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                p.y += p.speedY;
+                p.x += p.speedX;
+
+                if (p.y > canvas.height) {
+                    p.y = 0;
+                    p.x = Math.random() * canvas.width;
+                }
+            });
+
+            requestAnimationFrame(drawSand);
+        }
+
+        drawSand();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // === Profil kép betöltése ===
+        fetch('/api/user')
+            .then(res => res.json())
+            .then(data => {
+                const profilePic = document.getElementById('profilePic');
+                if (profilePic) profilePic.src = data.profile_pic || '/Uploads/profiles/default_profile.jpg';
+            })
+            .catch(() => {
+                const profilePic = document.getElementById('profilePic');
+                if (profilePic) profilePic.src = '/Uploads/profiles/default_profile.jpg';
+            });
+
+        // === Franchise csoport ===
+        const pathParts = window.location.pathname.split('/');
+        const filename = pathParts[pathParts.length - 1].replace('.html', '');
+        const group = filename.toLowerCase();
+
+        // === Tartalom betöltése ===
+        fetch(`/api/franchise/${group}`)
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('franchiseContent');
+
+                if (data.movies && data.movies.length > 0) {
+                    const movieHeader = document.createElement('h2');
+                    movieHeader.className = 'mt-5 mb-4 animate-in text-center';
+                    movieHeader.textContent = 'Filmek';
+                    container.appendChild(movieHeader);
+
+                    const movieRow = document.createElement('div');
+                    movieRow.className = 'row';
+
+                    data.movies.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'col-12 col-sm-6 col-md-4 animate-in';
+                        card.innerHTML = `
+                            <div class="card" data-bs-toggle="modal" data-bs-target="#videoModal"
+                                 data-video-src="${item.link}" data-video-title="${item.title}"
+                                 data-content-id="${item.id}" data-content-type="movie">
+                                <img src="${item.thumbnail}" class="card-img-top" alt="${item.title}">
+                                <div class="card-body">
+                                    <h5 class="card-title">${item.title}</h5>
+                                </div>
+                            </div>`;
+                        movieRow.appendChild(card);
+                    });
+                    container.appendChild(movieRow);
+                }
+
+                if (data.series && data.series.length > 0) {
+                    const seriesHeader = document.createElement('h2');
+                    seriesHeader.className = 'mt-5 mb-4 animate-in text-center';
+                    seriesHeader.textContent = 'Sorozatok';
+                    container.appendChild(seriesHeader);
+
+                    const seriesRow = document.createElement('div');
+                    seriesRow.className = 'row';
+
+                    data.series.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'col-12 col-sm-6 col-md-4 animate-in';
+                        card.innerHTML = `
+                            <a href="${item.link}" class="card">
+                                <img src="${item.thumbnail}" class="card-img-top" alt="${item.title}">
+                                <div class="card-body">
+                                    <h5 class="card-title">${item.title}</h5>
+                                </div>
+                            </a>`;
+                        seriesRow.appendChild(card);
+                    });
+                    container.appendChild(seriesRow);
+                }
+
+                if ((!data.movies || data.movies.length === 0) && (!data.series || data.series.length === 0)) {
+                    document.querySelector('.no-content').style.display = 'block';
+                }
+
+                setTimeout(() => {
+                    document.querySelectorAll('.animate-in').forEach(el => el.classList.add('visible'));
+                }, 100);
+            })
+            .catch(() => {
+                document.querySelector('.no-content').style.display = 'block';
+            });
+
+        // === NAVBAR GÖRGETÉSRE ELTŰNIK ===
+        let lastScrollTop = 0;
+        const navbar = document.getElementById('mainNavbar');
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            if (scrollTop > lastScrollTop) {
+                navbar.classList.add('hidden');
+            } else {
+                navbar.classList.remove('hidden');
+            }
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        });
+
+        // === VIDEÓ MODAL KEZELÉS ===
+        const videoModal = document.getElementById('videoModal');
+        let videoData = {};
+
+        videoModal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget;
+            videoData.videoSrc = button.getAttribute('data-video-src');
+            videoData.videoTitle = button.getAttribute('data-video-title');
+            videoData.contentId = button.getAttribute('data-content-id');
+            videoData.contentType = button.getAttribute('data-content-type');
+
+            const videoPlayer = videoModal.querySelector('#videoPlayer');
+            const videoSource = videoPlayer.querySelector('source');
+            const fullVideoSrc = videoData.videoSrc.startsWith('http') ? videoData.videoSrc : `http://streamwars.no-ip.org/${videoData.videoSrc}`;
+
+            videoSource.src = fullVideoSrc;
+            videoModal.querySelector('#videoTitle').innerText = videoData.videoTitle;
+            videoPlayer.load();
+
+            videoPlayer.play().catch(() => {});
+
+            videoPlayer.addEventListener('error', () => {
+                alert('Hiba a videó betöltésekor: ' + fullVideoSrc);
+            }, { once: true });
+
+            videoPlayer.addEventListener('pause', () => {
+                const currentTime = videoPlayer.currentTime;
+                const duration = videoPlayer.duration || 0;
+                if (currentTime > 0 && duration > 0) {
+                    fetch('/api/save-progress', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            content_id: videoData.contentId,
+                            content_type: videoData.contentType,
+                            progress: currentTime,
+                            file_path: videoData.videoSrc,
+                            thumbnail: button.querySelector('img').src,
+                            title: videoData.videoTitle
+                        })
+                    }).catch(() => {});
+                }
+            });
+        });
+
+        videoModal.addEventListener('hide.bs.modal', () => {
+            const videoPlayer = videoModal.querySelector('#videoPlayer');
+            const currentTime = videoPlayer.currentTime;
+            const duration = videoPlayer.duration || 0;
+            videoPlayer.pause();
+            if (currentTime > 0 && duration > 0) {
+                fetch('/api/save-progress', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content_id: videoData.contentId,
+                        content_type: videoData.contentType,
+                        progress: currentTime,
+                        file_path: videoData.videoSrc,
+                        thumbnail: document.querySelector('#franchiseContent img')?.src || 'https://via.placeholder.com/200',
+                        title: videoData.videoTitle
+                    })
+                }).catch(() => {});
+            }
+        });
+    </script>
+</body>
+</html>
