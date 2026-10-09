@@ -1,0 +1,5 @@
+# Keep the folder tree only. Every media file stays on disk.
+*
+!*/
+!.gitignore
+!**/.gitkeep
